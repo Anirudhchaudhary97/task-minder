@@ -69,7 +69,7 @@ export default function TaskProvider({ children }: TaskProviderProps) {
         setUsers(userNames);
 
         // Combined userId and task for task card component.
-        const mergedTasks: Task[] = todos.map((todo: any) => {
+        const mergedTasks: Task[] = todos.slice(0, 10).map((todo: any) => {
           const user = userNames.find((user) => user.id === todo.userId);
           return {
             ...todo,
