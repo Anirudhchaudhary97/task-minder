@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "@/hooks/use-toast";
 import React, {
   createContext,
   useContext,
@@ -43,38 +44,47 @@ interface TaskProviderProps {
 }
 
 export default function TaskProvider({ children }: TaskProviderProps) {
+  const { toast } = useToast();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
     const fetchTasksAndUsers = async () => {
-      const todosResponse = await fetch(
-        "https://jsonplaceholder.typicode.com/todos"
-      );
-      const usersResponse = await fetch(
-        "https://jsonplaceholder.typicode.com/users"
-      );
-      const todos = await todosResponse.json();
-      const users = await usersResponse.json();
+      try {
+        const todosResponse = await fetch(
+          "https://jsonplaceholder.typicode.com/todos"
+        );
+        const usersResponse = await fetch(
+          "https://jsonplaceholder.typicode.com/users"
+        );
+        const todos = await todosResponse.json();
+        const users = await usersResponse.json();
 
-      // Extracting only id and name for each user
-      const userNames: User[] = users.map((user: any) => ({
-        id: user.id,
-        userName: user.name,
-      }));
+        // Extracting only id and name for each user
+        const userNames: User[] = users.map((user: any) => ({
+          id: user.id,
+          userName: user.name,
+        }));
 
-      setUsers(userNames);
+        setUsers(userNames);
 
-      // Combined userId and task for task card component.
-      const mergedTasks: Task[] = todos.map((todo: any) => {
-        const user = userNames.find((user) => user.id === todo.userId);
-        return {
-          ...todo,
-          userName: user ? user.userName : "Unknown User",
-        };
-      });
+        // Combined userId and task for task card component.
+        const mergedTasks: Task[] = todos.map((todo: any) => {
+          const user = userNames.find((user) => user.id === todo.userId);
+          return {
+            ...todo,
+            userName: user ? user.userName : "Unknown User",
+          };
+        });
 
-      setTasks(mergedTasks);
+        setTasks(mergedTasks);
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Somethign went wrong!",
+          description: "Failed to load tasks and users.",
+        });
+      }
     };
 
     fetchTasksAndUsers();
@@ -89,6 +99,10 @@ export default function TaskProvider({ children }: TaskProviderProps) {
         id: prevTasks.length + 1,
       },
     ]);
+    toast({
+      variant: "success",
+      description: `Task created successfully!`,
+    });
   };
 
   // Update task
@@ -98,11 +112,19 @@ export default function TaskProvider({ children }: TaskProviderProps) {
         task.id === id ? { ...task, ...updatedTask } : task
       )
     );
+    toast({
+      variant: "success",
+      description: `Task updated successfully!`,
+    });
   };
 
   // Delete task
   const deleteTask = (id: number) => {
     setTasks((prevTasks) => prevTasks.filter((task) => task.id !== id));
+    toast({
+      variant: "success",
+      description: `Task deleted successfully!`,
+    });
   };
 
   return (
